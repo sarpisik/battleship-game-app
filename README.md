@@ -30,3 +30,13 @@ npm install
 # or
 yarn install
 ```
+
+### Run
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+App will run at `http://localhost:5173`

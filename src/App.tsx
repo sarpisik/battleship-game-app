@@ -1,219 +1,17 @@
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import "./App.css";
-import hit from "./assets/hit.png";
-import hitSmall from "./assets/hit_small.png";
-import missSmall from "./assets/miss_small.png";
-import miss from "./assets/miss.png";
-import battleshipShape from "./assets/battleship_shape.png";
-import carrierShape from "./assets/carrier_shape.png";
-import cruiserShape from "./assets/cruiser_shape.png";
-import submarineShape from "./assets/submarine_shape.png";
-
-const Header = () => {
-  return <div>HEADER</div>;
-};
-const Board = ({ children }: { children: ReactNode }) => {
-  return (
-    <div style={{ display: "inline-block", border: "2px solid black" }}>
-      {children}
-    </div>
-  );
-};
-const Score = ({ score }: { score: number }) => {
-  return (
-    <div style={{ display: "flex" }}>
-      <div className="score-col">
-        <div>
-          0{score}
-          <hr />
-          player 1
-        </div>
-      </div>
-      <div className="score-col">
-        <div>
-          00
-          <hr />
-          player 2
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const renderHealth = (size: number, hits: number[][]) => {
-  const imgs = [];
-
-  for (let i = 0; i < size; i++) {
-    const hit = hits[i];
-    if (hit) {
-      imgs.push(
-        <img
-          key={`${hit[0]},${hit[1]}`}
-          className="img-responsive img-miss"
-          src={hitSmall}
-          alt="Hit"
-        />
-      );
-    } else {
-      imgs.push(
-        <img
-          key={i}
-          className="img-responsive img-miss"
-          src={missSmall}
-          alt="Miss"
-        />
-      );
-    }
-  }
-
-  return imgs;
-};
-
-const Ships = ({ ships }: { ships: ShipMap }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-      }}
-    >
-      <div className="ship-col">
-        <img
-          className="img-responsive img-ship"
-          src={carrierShape}
-          alt="Carrier shape"
-        />
-        {renderHealth(ships.carrier.positions.length, ships.carrier.hits)}
-      </div>
-      <div className="ship-col">
-        <img
-          className="img-responsive img-ship"
-          src={submarineShape}
-          alt="Submarine shape"
-        />
-        {renderHealth(ships.submarine.positions.length, ships.submarine.hits)}
-      </div>
-      <div className="ship-col">
-        <img
-          className="img-responsive img-ship"
-          src={battleshipShape}
-          alt="Battleship shape"
-        />
-        {renderHealth(ships.battleship.positions.length, ships.battleship.hits)}
-      </div>
-      <div className="ship-col">
-        <img
-          className="img-responsive img-ship"
-          src={cruiserShape}
-          alt="Cruiser shape"
-        />
-        {renderHealth(ships.cruiser.positions.length, ships.cruiser.hits)}
-      </div>
-      <div className="ship-col">
-        <img
-          className="img-responsive img-ship"
-          src={cruiserShape}
-          alt="Destroyer shape"
-        />
-        {renderHealth(ships.destroyer.positions.length, ships.destroyer.hits)}
-      </div>
-    </div>
-  );
-};
-
-const Cell = ({
-  status,
-  onFire,
-}: {
-  status: FireType | undefined;
-  onFire: () => void;
-}) => {
-  return (
-    <div
-      onClick={onFire}
-      style={{
-        width: 30,
-        height: 30,
-        border: "1px solid #555",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-      }}
-    >
-      {status && (
-        <img
-          src={status === "hit" ? hit : miss}
-          alt={status === "hit" ? "Hit icon" : "Miss icon"}
-          style={{
-            width: 30,
-            height: 30,
-          }}
-        />
-      )}
-    </div>
-  );
-};
-
-const SIZE = 10;
-
-const layout = [
-  {
-    ship: "carrier",
-    positions: [
-      [2, 9],
-      [3, 9],
-      [4, 9],
-      [5, 9],
-      [6, 9],
-    ],
-  },
-  {
-    ship: "battleship",
-    positions: [
-      [5, 2],
-      [5, 3],
-      [5, 4],
-      [5, 5],
-    ],
-  },
-  {
-    ship: "cruiser",
-    positions: [
-      [8, 1],
-      [8, 2],
-      [8, 3],
-    ],
-  },
-  {
-    ship: "submarine",
-    positions: [
-      [3, 0],
-      [3, 1],
-      [3, 2],
-    ],
-  },
-  {
-    ship: "destroyer",
-    positions: [
-      [0, 0],
-      [1, 0],
-    ],
-  },
-];
-
-type ShipMap = Record<
-  string,
-  {
-    positions: number[][];
-    hits: number[][];
-  }
->;
+import { Board } from "./components/Board";
+import { Cell } from "./components/Cell";
+import { Header } from "./components/Header";
+import { Score } from "./components/Score";
+import { Ships } from "./components/Ships";
+import { LAYOUT, SIZE } from "./constants";
+import { FiredShots, ShipMap } from "./types";
 
 const createShipMap = (): ShipMap => {
   const map: ShipMap = {};
 
-  layout.forEach(({ ship, positions }) => {
+  LAYOUT.forEach(({ ship, positions }) => {
     map[ship] = {
       positions,
       hits: [],
@@ -222,10 +20,6 @@ const createShipMap = (): ShipMap => {
 
   return map;
 };
-
-type FireType = "miss" | "hit";
-
-type FiredShots = Record<string, FireType>;
 function App() {
   const [firedShots, setFiredShots] = useState<FiredShots>({});
   const [ships, setShips] = useState(createShipMap);
@@ -238,11 +32,6 @@ function App() {
     setScore(0);
     setGameOver(false);
   };
-
-  const isGameOver = () =>
-    Object.values(ships).every(
-      (ship) => ship.positions.length === ship.hits.length
-    );
 
   const fireAt = (x: number, y: number) => {
     const key = `${x},${y}`;
@@ -263,9 +52,13 @@ function App() {
       }
     }
 
+    const isGameOver = Object.values(newShips).every(
+      (ship) => ship.positions.length === ship.hits.length
+    );
+
     setFiredShots(updatedShots);
     setShips(newShips);
-    setGameOver(isGameOver());
+    setGameOver(isGameOver);
   };
 
   const renderGrid = () => {
